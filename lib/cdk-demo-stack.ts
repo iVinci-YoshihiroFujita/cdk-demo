@@ -1,18 +1,17 @@
 import * as apigateway from '@aws-cdk/aws-apigateway';
 import * as lambda from '@aws-cdk/aws-lambda';
-import { App, CfnParameter, Duration, Stack, StackProps } from '@aws-cdk/core';
+import { App, Duration, Stack, StackProps } from '@aws-cdk/core';
 
 export class CdkDemoStack extends Stack {
   constructor(scope: App, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const name = 'sampleGet'
-    const sampleGetLambda = new lambda.Function(this, name, {
+    const sampleGetLambda = new lambda.Function(this, 'sampleGet', {
       description: 'sample lambda for study',
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'index.handler',
       code: lambda.Code.fromInline(`
-          exports.handler = (event, context) => {
+          exports.handler = async (event) => {
             console.log(event);
 
             const response = {
@@ -20,17 +19,22 @@ export class CdkDemoStack extends Stack {
               headers: {
                 "Content-Type": "application/json; charset=utf-8",
               },
-              body: {
+              body: JSON.stringify({
                 success: true,
                 message: "hello from cdk lambda"
-              }
+              })
             };
             
             console.log(response);
-            context.succeed(response);
+            return response;
           };
       `),
       timeout: Duration.seconds(60)
     });
+
+    // const api = new apigateway.RestApi(this, 'SampleRestApi', { cloudWatchRole: false });
+    // api.root.addMethod('GET', new apigateway.LambdaIntegration(sampleGetLambda));
+    
+    // api.root.addResource('hoge').addMethod('GET', new apigateway.LambdaIntegration(hogeLambda);
   }
 }
